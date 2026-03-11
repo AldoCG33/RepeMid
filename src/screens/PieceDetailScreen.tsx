@@ -22,6 +22,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList }           from '../navigation/AppNavigator';
 import { getPieceById, updateAfterPractice, deletePiece } from '../database/models/pieceModel';
 import { ViolinPiece, PieceStatus }     from '../types';
+import { scheduleReviewNotification, cancelPieceNotification } from '../utils/notifications';
 import {
   COLORS, STATUS_COLORS, STATUS_LABELS,
   DIFFICULTY_COLORS, DIFFICULTY_LABELS,
@@ -100,7 +101,13 @@ export default function PieceDetailScreen({ route, navigation }: Props) {
       setShowRating(false);
       // Recargar los datos actualizados
       const updated = getPieceById(piece.id);
-      if (updated) setPiece(updated);
+      if (updated) {
+        setPiece(updated);
+        // Programar (o reprogramar) la notificación para la próxima revisión
+        cancelPieceNotification(updated.id)
+          .then(() => scheduleReviewNotification(updated, updated.intervalDays))
+          .catch(() => { /* No-crítico: nunca interrumpir el flujo */ });
+      }
     } catch {
       Alert.alert('Error', 'No se pudo registrar la práctica.');
     } finally {
@@ -155,6 +162,15 @@ export default function PieceDetailScreen({ route, navigation }: Props) {
           <Ionicons name="chevron-back" size={26} color={COLORS.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle} numberOfLines={1}>{piece.title}</Text>
+        {/* Botón editar */}
+        <TouchableOpacity
+          onPress={() => navigation.navigate('EditPiece', { id: piece.id })}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          style={{ marginRight: SPACING.sm }}
+        >
+          <Ionicons name="create-outline" size={22} color={COLORS.accent} />
+        </TouchableOpacity>
+        {/* Botón eliminar */}
         <TouchableOpacity onPress={handleDelete}>
           <Ionicons name="trash-outline" size={22} color={COLORS.error} />
         </TouchableOpacity>

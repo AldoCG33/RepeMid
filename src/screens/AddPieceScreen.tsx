@@ -30,20 +30,20 @@ interface FormErrors {
 }
 
 export default function AddPieceScreen({ navigation }: AddPieceScreenProps) {
-  const [title, setTitle]               = useState('');
-  const [composer, setComposer]         = useState('');
-  const [difficulty, setDifficulty]     = useState(3);
-  const [technicalNotes, setNotes]      = useState('');
-  const [errors, setErrors]             = useState<FormErrors>({});
-  const [focusedField, setFocused]      = useState<string | null>(null);
-  const [isSaving, setIsSaving]         = useState(false);
+  const [title, setTitle] = useState('');
+  const [composer, setComposer] = useState('');
+  const [difficulty, setDifficulty] = useState(3);
+  const [technicalNotes, setNotes] = useState('');
+  const [errors, setErrors] = useState<FormErrors>({});
+  const [focusedField, setFocused] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
 
   const composerRef = useRef<TextInput>(null);
-  const notesRef    = useRef<TextInput>(null);
+  const notesRef = useRef<TextInput>(null);
 
   function validate(): boolean {
     const e: FormErrors = {};
-    if (!title.trim())           e.title    = 'El título es obligatorio.';
+    if (!title.trim()) e.title = 'El título es obligatorio.';
     else if (title.trim().length < 2) e.title = 'Debe tener al menos 2 caracteres.';
     if (composer.trim().length > 0 && composer.trim().length < 2)
       e.composer = 'Debe tener al menos 2 caracteres.';
@@ -102,7 +102,7 @@ export default function AddPieceScreen({ navigation }: AddPieceScreenProps) {
           {/* Título */}
           <FormField
             label="Título *"
-            placeholder="ej. Concierto en La Menor"
+            placeholder="ej. el rey de la huasteca"
             value={title}
             onChangeText={(t) => { setTitle(t); setErrors(e => ({ ...e, title: undefined })); }}
             onFocus={() => setFocused('title')}
@@ -119,7 +119,7 @@ export default function AddPieceScreen({ navigation }: AddPieceScreenProps) {
           <FormField
             ref={composerRef}
             label="Compositor"
-            placeholder="ej. A. Vivaldi"
+            placeholder="ej. Juan Gabriel"
             value={composer}
             onChangeText={(t) => { setComposer(t); setErrors(e => ({ ...e, composer: undefined })); }}
             onFocus={() => setFocused('composer')}
@@ -164,9 +164,9 @@ export default function AddPieceScreen({ navigation }: AddPieceScreenProps) {
             {isSaving
               ? <ActivityIndicator color={COLORS.white} size="small" />
               : <>
-                  <Ionicons name="checkmark-circle" size={20} color={COLORS.white} />
-                  <Text style={styles.saveBtnText}>Guardar en Repertorio</Text>
-                </>
+                <Ionicons name="checkmark-circle" size={20} color={COLORS.white} />
+                <Text style={styles.saveBtnText}>Guardar en Repertorio</Text>
+              </>
             }
           </TouchableOpacity>
         </ScrollView>

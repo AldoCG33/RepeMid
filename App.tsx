@@ -4,20 +4,25 @@ import { View, Text, StyleSheet } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import AppNavigator from './src/navigation/AppNavigator';
 import { initSchema } from './src/database/schema';
+import { requestNotificationPermission } from './src/utils/notifications';
 
 export default function App() {
   const [dbReady, setDbReady] = useState(false);
   const [dbError, setDbError] = useState<string | null>(null);
 
   useEffect(() => {
-    try {
-      // Crea las tablas si no existen. Solo se ejecuta una vez al iniciar.
-      initSchema();
-      setDbReady(true);
-    } catch (error) {
-      console.error('[App] Error crítico al inicializar la DB:', error);
-      setDbError('No se pudo inicializar la base de datos.');
-    }
+    (async () => {
+      try {
+        // Crea las tablas si no existen. Solo se ejecuta una vez al iniciar.
+        initSchema();
+        setDbReady(true);
+      } catch (error) {
+        console.error('[App] Error crítico al inicializar la DB:', error);
+        setDbError('No se pudo inicializar la base de datos.');
+      }
+      // Pedir permisos de notificación (no-crítico: la app funciona sin ellos)
+      await requestNotificationPermission();
+    })();
   }, []);
 
   // Pantalla de error crítico (raro, pero mejor que un crash silencioso)

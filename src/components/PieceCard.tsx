@@ -22,6 +22,8 @@ import {
 interface PieceCardProps {
   piece: ViolinPiece;
   onPress?: (piece: ViolinPiece) => void;
+  /** Si true, aplica un borde naranja de alerta (usada en la sección "Para hoy") */
+  highlighted?: boolean;
 }
 
 // ─────────────────────────────────────────────────
@@ -46,14 +48,14 @@ function nextPracticeLabel(piece: ViolinPiece): string {
 // ─────────────────────────────────────────────────
 // COMPONENTE
 // ─────────────────────────────────────────────────
-export default function PieceCard({ piece, onPress }: PieceCardProps) {
+export default function PieceCard({ piece, onPress, highlighted }: PieceCardProps) {
   const statusColor = STATUS_COLORS[piece.status];
   const statusLabel = STATUS_LABELS[piece.status];
   const due         = isDueToday(piece);
 
   return (
     <TouchableOpacity
-      style={styles.card}
+      style={[styles.card, highlighted && styles.cardHighlighted]}
       onPress={() => onPress?.(piece)}
       activeOpacity={0.82}
     >
@@ -121,6 +123,10 @@ const styles = StyleSheet.create({
     paddingRight: SPACING.md,
     overflow: 'hidden',
     ...SHADOWS.card,
+  },
+  cardHighlighted: {
+    borderWidth: 1.5,
+    borderColor: COLORS.warning + '88',
   },
   strip: {
     width: 5,
