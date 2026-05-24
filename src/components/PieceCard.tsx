@@ -1,20 +1,13 @@
 // src/components/PieceCard.tsx
 // Tarjeta visual de una pieza del repertorio.
-// Reutilizable en HomeScreen, listas de búsqueda, etc.
+// Ahora muestra información del algoritmo de repetición espaciada (SM-2).
 
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { ViolinPiece, PieceStatus } from '../types';
-import {
-  COLORS,
-  STATUS_COLORS,
-  STATUS_LABELS,
-  SPACING,
-  RADIUS,
-  TYPOGRAPHY,
-  SHADOWS,
-} from '../theme';
+import { COLORS, STATUS_COLORS, STATUS_LABELS } from '../theme';
+import { styles } from './styles/PieceCard.styles';
 
 // ─────────────────────────────────────────────────
 // PROPS
@@ -38,11 +31,41 @@ function isDueToday(piece: ViolinPiece): boolean {
   return next <= today;
 }
 
+function daysSinceLastPractice(piece: ViolinPiece): number {
+  const last = new Date(piece.lastPracticed);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  last.setHours(0, 0, 0, 0);
+  return Math.floor((today.getTime() - last.getTime()) / (1000 * 60 * 60 * 24));
+}
+
 function nextPracticeLabel(piece: ViolinPiece): string {
   if (piece.status === PieceStatus.Dormant) return 'Dormida';
   if (isDueToday(piece)) return '¡Hoy!';
   const days = Math.round(piece.intervalDays);
   return `En ${days} día${days !== 1 ? 's' : ''}`;
+}
+
+/** Devuelve un icono representativo del estado SM-2 */
+function statusIcon(status: PieceStatus): keyof typeof Ionicons.glyphMap {
+  switch (status) {
+    case PieceStatus.Learning:   return 'book-outline';
+    case PieceStatus.Polishing:  return 'sparkles-outline';
+    case PieceStatus.Repertoire: return 'trophy-outline';
+    case PieceStatus.Dormant:    return 'moon-outline';
+  }
+}
+
+/** Genera la línea descriptiva que evidencia el algoritmo */
+function algorithmHint(piece: ViolinPiece): string {
+  if (piece.status === PieceStatus.Dormant) return 'En pausa — no se programarán repasos';
+
+  const days = daysSinceLastPractice(piece);
+  const interval = Math.round(piece.intervalDays);
+
+  if (days === 0) return `Intervalo actual: ${interval} día${interval !== 1 ? 's' : ''}`;
+  if (days === 1) return `Hace 1 día que no la tocas · Intervalo: ${interval}d`;
+  return `Hace ${days} días que no la tocas · Intervalo: ${interval}d`;
 }
 
 // ─────────────────────────────────────────────────
@@ -52,6 +75,7 @@ export default function PieceCard({ piece, onPress, highlighted }: PieceCardProp
   const statusColor = STATUS_COLORS[piece.status];
   const statusLabel = STATUS_LABELS[piece.status];
   const due         = isDueToday(piece);
+  const icon        = statusIcon(piece.status);
 
   return (
     <TouchableOpacity
@@ -67,6 +91,7 @@ export default function PieceCard({ piece, onPress, highlighted }: PieceCardProp
         <View style={styles.headerRow}>
           <Text style={styles.title} numberOfLines={1}>{piece.title}</Text>
           <View style={[styles.badge, { backgroundColor: statusColor + '22' }]}>
+            <Ionicons name={icon} size={10} color={statusColor} style={{ marginRight: 3 }} />
             <Text style={[styles.badgeText, { color: statusColor }]}>
               {statusLabel}
             </Text>
@@ -75,6 +100,14 @@ export default function PieceCard({ piece, onPress, highlighted }: PieceCardProp
 
         {/* Compositor */}
         <Text style={styles.composer}>{piece.composer}</Text>
+
+        {/* ✨ Línea del algoritmo de repetición espaciada */}
+        <View style={styles.algorithmRow}>
+          <Ionicons name="pulse-outline" size={12} color={statusColor} />
+          <Text style={[styles.algorithmText, { color: statusColor }]}>
+            {algorithmHint(piece)}
+          </Text>
+        </View>
 
         {/* Pie: dificultad · próxima práctica · reps */}
         <View style={styles.footer}>
@@ -110,78 +143,3 @@ export default function PieceCard({ piece, onPress, highlighted }: PieceCardProp
     </TouchableOpacity>
   );
 }
-
-// ─────────────────────────────────────────────────
-// ESTILOS
-// ─────────────────────────────────────────────────
-const styles = StyleSheet.create({
-  card: {
-    flexDirection: 'row',
-    backgroundColor: COLORS.bgCard,
-    borderRadius: RADIUS.md,
-    marginBottom: SPACING.md,
-    paddingRight: SPACING.md,
-    overflow: 'hidden',
-    ...SHADOWS.card,
-  },
-  cardHighlighted: {
-    borderWidth: 1.5,
-    borderColor: COLORS.warning + '88',
-  },
-  strip: {
-    width: 5,
-  },
-  content: {
-    flex: 1,
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.sm + 2,
-    justifyContent: 'center',
-  },
-  headerRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: SPACING.xs,
-  },
-  title: {
-    flex: 1,
-    fontSize: TYPOGRAPHY.sizeSm,
-    fontWeight: TYPOGRAPHY.semiBold,
-    color: COLORS.textPrimary,
-    marginRight: SPACING.sm,
-  },
-  badge: {
-    paddingHorizontal: SPACING.sm,
-    paddingVertical: 2,
-    borderRadius: RADIUS.full,
-  },
-  badgeText: {
-    fontSize: TYPOGRAPHY.sizeMicro,
-    fontWeight: TYPOGRAPHY.bold,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  composer: {
-    fontSize: TYPOGRAPHY.sizeXs,
-    color: COLORS.textSecondary,
-    fontStyle: 'italic',
-    marginBottom: SPACING.sm,
-  },
-  footer: {
-    flexDirection: 'row',
-    gap: SPACING.md,
-  },
-  stat: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.xs,
-  },
-  statText: {
-    fontSize: TYPOGRAPHY.sizeTiny,
-    color: COLORS.textDisabled,
-  },
-  dueText: {
-    color: COLORS.accent,
-    fontWeight: TYPOGRAPHY.semiBold,
-  },
-});

@@ -1,15 +1,11 @@
 // src/database/schema.ts
 // Define y ejecuta todos los CREATE TABLE de la app.
-// Importar e invocar `initSchema()` una sola vez al arrancar la app.
-//
-// Convención: cada modelo tiene su propia sección con un comentario claro.
-// Cuando agregues un nuevo instrumento o entidad, añade su CREATE TABLE aquí.
 
 import db from './database';
 
-// ─────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 // MODELO: ViolinPiece — Piezas de repertorio
-// ─────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 const CREATE_VIOLIN_PIECES = `
   CREATE TABLE IF NOT EXISTS violin_pieces (
     id              INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -26,27 +22,24 @@ const CREATE_VIOLIN_PIECES = `
   );
 `;
 
-// ─────────────────────────────────────────────────
-// MODELO: PracticeSession — Historial de sesiones (futuro)
-// ─────────────────────────────────────────────────
-// const CREATE_PRACTICE_SESSIONS = `
-//   CREATE TABLE IF NOT EXISTS practice_sessions (
-//     id        INTEGER PRIMARY KEY AUTOINCREMENT,
-//     pieceId   INTEGER NOT NULL REFERENCES violin_pieces(id) ON DELETE CASCADE,
-//     date      TEXT    NOT NULL DEFAULT (date('now')),
-//     quality   INTEGER NOT NULL CHECK(quality BETWEEN 0 AND 5),
-//     duration  INTEGER,   -- minutos
-//     notes     TEXT
-//   );
-// `;
+// ─────────────────────────────────────────────────────────────────────────────
+// MODELO: QuickNote — Notas de captura rápida
+// ─────────────────────────────────────────────────────────────────────────────
+const CREATE_QUICK_NOTES = `
+  CREATE TABLE IF NOT EXISTS quick_notes (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    note        TEXT    NOT NULL,
+    created_at  TEXT    NOT NULL DEFAULT (datetime('now', 'localtime'))
+  );
+`;
 
-// ─────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 // INICIALIZADOR PRINCIPAL
-// ─────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
 export function initSchema(): void {
   try {
     db.execSync(CREATE_VIOLIN_PIECES);
-    // db.execSync(CREATE_PRACTICE_SESSIONS); // descomentar cuando sea necesario
+    db.execSync(CREATE_QUICK_NOTES);
     console.log('[Schema] Todas las tablas inicializadas correctamente.');
   } catch (error) {
     console.error('[Schema] Error al inicializar tablas:', error);

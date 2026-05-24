@@ -2,9 +2,10 @@
 // Pantalla de estado vacío genérico y reutilizable.
 
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { COLORS, SPACING, TYPOGRAPHY } from '../theme';
+import { COLORS } from '../theme';
+import { styles } from './styles/EmptyState.styles';
 
 interface EmptyStateProps {
   icon?: keyof typeof Ionicons.glyphMap;
@@ -25,24 +26,3 @@ export default function EmptyState({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    alignItems: 'center',
-    marginTop: SPACING.xxxl * 2,
-    paddingHorizontal: SPACING.xxxl,
-  },
-  title: {
-    fontSize: TYPOGRAPHY.sizeSm,
-    color: COLORS.textDisabled,
-    textAlign: 'center',
-    marginTop: SPACING.lg,
-  },
-  subtitle: {
-    fontSize: TYPOGRAPHY.sizeXs,
-    color: COLORS.textDisabled,
-    textAlign: 'center',
-    marginTop: SPACING.sm,
-    lineHeight: 20,
-  },
-});

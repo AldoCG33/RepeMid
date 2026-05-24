@@ -3,16 +3,10 @@
 // Extrae la lógica y UI del formulario de AddPieceScreen.
 
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import {
-  COLORS,
-  DIFFICULTY_COLORS,
-  DIFFICULTY_LABELS,
-  SPACING,
-  RADIUS,
-  TYPOGRAPHY,
-} from '../theme';
+import { COLORS, DIFFICULTY_COLORS, DIFFICULTY_LABELS } from '../theme';
+import { styles } from './styles/DifficultyPicker.styles';
 
 // ─────────────────────────────────────────────────
 // PROPS
@@ -61,43 +55,3 @@ export default function DifficultyPicker({ value, onChange }: DifficultyPickerPr
     </View>
   );
 }
-
-// ─────────────────────────────────────────────────
-// ESTILOS
-// ─────────────────────────────────────────────────
-const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    gap: SPACING.sm,
-  },
-  btn: {
-    flex: 1,
-    paddingVertical: SPACING.md + 2,
-    borderRadius: RADIUS.md,
-    alignItems: 'center',
-    borderWidth: 1.5,
-    borderColor: COLORS.borderLight,
-    backgroundColor: COLORS.bgCard,
-  },
-  btnNumber: {
-    fontSize: TYPOGRAPHY.sizeMd - 2,
-    fontWeight: TYPOGRAPHY.bold,
-    color: COLORS.textDisabled,
-  },
-  btnNumberActive: {
-    color: COLORS.white,
-  },
-  hint: {
-    marginTop: SPACING.sm + 2,
-    paddingHorizontal: SPACING.md,
-    paddingVertical: SPACING.sm,
-    borderRadius: RADIUS.sm,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: SPACING.sm,
-  },
-  hintText: {
-    fontSize: TYPOGRAPHY.sizeXxs,
-    fontWeight: TYPOGRAPHY.semiBold,
-  },
-});
