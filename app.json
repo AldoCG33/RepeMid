@@ -16,6 +16,7 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.aldocg.repemind",
       "adaptiveIcon": {
         "foregroundImage": "./assets/Icono de la app.png",
         "backgroundColor": "#ffffff"
@@ -28,6 +29,12 @@
     },
     "plugins": [
       "expo-sqlite"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "6c1a289a-2d31-4d26-9cc6-642b4c0b516c"
+      }
+    },
+    "owner": "aldo33"
   }
 }

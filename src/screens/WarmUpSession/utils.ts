@@ -30,25 +30,25 @@ export function formatTime(secs: number): string {
   return `${m}:${s.toString().padStart(2, '0')}`;
 }
 
-export function buildSteps(routine: {
-  warmups: string[];
-  challenges: ViolinPiece[];
-  reviews: ViolinPiece[];
-}): SessionStep[] {
+import { ExpressRoutine } from '../../database/models/pieceModel';
+
+export function buildSteps(routine: ExpressRoutine): SessionStep[] {
   const steps: SessionStep[] = [];
-  // Escalas (~5 min cada una)
-  routine.warmups.forEach((scale, i) => {
-    steps.push({
-      type: 'warmup',
-      title: scale,
-      subtitle: `Escala ${routine.warmups.length > 1 ? i + 1 : ''} — 2 octavas`,
-      durationSecs: 5 * 60,
-      color: COLORS.accent,
-      icon: 'musical-note',
-    });
+  
+  // Calentamiento (Escala + Ritmo)
+  const { scale, rhythm } = routine.warmUp;
+  steps.push({
+    type: 'warmup',
+    title: scale.name,
+    subtitle: `${rhythm} · ${scale.accidentals}`,
+    durationSecs: 5 * 60,
+    color: COLORS.accent,
+    icon: 'musical-note',
   });
-  // Retos técnicos (~8 min cada uno)
-  routine.challenges.forEach((piece) => {
+
+  // Reto técnico
+  if (routine.technicalPiece) {
+    const piece = routine.technicalPiece;
     steps.push({
       type: 'challenge',
       title: piece.title,
@@ -58,9 +58,11 @@ export function buildSteps(routine: {
       icon: 'flame',
       piece,
     });
-  });
-  // Repasos (~7 min cada uno)
-  routine.reviews.forEach((piece) => {
+  }
+
+  // Repaso
+  if (routine.repertoirePiece) {
+    const piece = routine.repertoirePiece;
     steps.push({
       type: 'review',
       title: piece.title,
@@ -70,6 +72,7 @@ export function buildSteps(routine: {
       icon: 'refresh',
       piece,
     });
-  });
+  }
+
   return steps;
 }

@@ -35,7 +35,7 @@ export function ExpressCard({ routineConfig, onConfigPress, onStartPress }: Expr
               Rutina (~{routineConfig.timeEstimateMins} min)
             </Text>
             <Text style={styles.expressSubtitle}>
-              {routineConfig.numScales} Escala{routineConfig.numScales !== 1 ? 's' : ''} + {routineConfig.numLearning + routineConfig.numRepertoire} Pieza{routineConfig.numLearning + routineConfig.numRepertoire !== 1 ? 's' : ''} a repasar
+              1 Escala y ritmo aleatorio + piezas más urgentes del algoritmo
             </Text>
           </View>
 

@@ -2,7 +2,6 @@
 import React, { useRef } from 'react';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../navigation/AppNavigator';
-import { getRoutineConfig } from '../../database/models/settingsModel';
 import { buildSteps } from './utils';
 import { useSessionTimer } from './hooks/useSessionTimer';
 import { SessionTimer } from './components/SessionTimer';
@@ -13,7 +12,6 @@ type Props = NativeStackScreenProps<RootStackParamList, 'WarmUpSession'>;
 
 export default function WarmUpSessionScreen({ route, navigation }: Props) {
   const { routine } = route.params;
-  const config = getRoutineConfig();
   const steps = useRef(buildSteps(routine)).current;
 
   const {
@@ -68,7 +66,6 @@ export default function WarmUpSessionScreen({ route, navigation }: Props) {
   return (
     <RoutineSummary
       routine={routine}
-      config={config}
       onStartPress={startSession}
       onBackPress={() => navigation.goBack()}
     />

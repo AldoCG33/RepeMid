@@ -4,7 +4,7 @@
 
 import db from '../database';
 import { ViolinPiece, NewViolinPiece, UpdateViolinPiece, PieceStatus } from '../../types';
-import { getRandomScale } from '../../utils/scales';
+import { getRandomScale, getRandomRhythm, ScaleInfo } from '../../utils/scales';
 
 // ─────────────────────────────────────────────────
 // TIPADO INTERNO — Fila cruda de SQLite
@@ -82,64 +82,61 @@ export function getPieceById(id: number): ViolinPiece | null {
   }
 }
 
-import { getRoutineConfig } from './settingsModel';
-
 // ─────────────────────────────────────────────────
 // TIPOS — Rutina Exprés
 // ─────────────────────────────────────────────────
 export interface ExpressRoutine {
-  warmups: string[];
-  challenges: ViolinPiece[];
-  reviews: ViolinPiece[];
+  warmUp: {
+    scale: ScaleInfo;
+    rhythm: string;
+  };
+  technicalPiece: ViolinPiece | null;
+  repertoirePiece: ViolinPiece | null;
 }
 
-// ─────────────────────────────────────────────────
-// READ — Rutina Exprés
-// ─────────────────────────────────────────────────
 export function getExpressRoutine(): ExpressRoutine {
-  const config = getRoutineConfig();
+  const warmUp = {
+    scale: getRandomScale(),
+    rhythm: getRandomRhythm(),
+  };
 
-  // Escalas
-  const warmups: string[] = [];
-  for (let i = 0; i < config.numScales; i++) {
-    warmups.push(getRandomScale());
-  }
-
-  // Retos técnicos
-  let challenges: ViolinPiece[] = [];
+  // Reto técnico más urgente
+  let technicalPiece: ViolinPiece | null = null;
   try {
-    const rows = db.getAllSync<RawPieceRow>(
+    const row = db.getFirstSync<RawPieceRow>(
       `SELECT * FROM violin_pieces
        WHERE status IN ('learning', 'polishing')
        ORDER BY
          date(lastPracticed, '+' || CAST(intervalDays AS TEXT) || ' days') ASC,
          difficulty DESC
-       LIMIT ?;`,
-       [config.numLearning]
+       LIMIT 1;`
     );
-    challenges = rows.map(mapRow);
+    technicalPiece = row ? mapRow(row) : null;
   } catch (error) {
-    console.warn('[pieceModel] Error en getExpressRoutine (challenges):', error);
+    console.warn('[pieceModel] Error en getExpressRoutine (technicalPiece):', error);
   }
 
-  // Repasos
-  let reviews: ViolinPiece[] = [];
+  // Repaso más urgente
+  let repertoirePiece: ViolinPiece | null = null;
   try {
-    const rows = db.getAllSync<RawPieceRow>(
+    const row = db.getFirstSync<RawPieceRow>(
       `SELECT * FROM violin_pieces
        WHERE status = 'repertoire'
        ORDER BY
          date(lastPracticed, '+' || CAST(intervalDays AS TEXT) || ' days') ASC,
          difficulty DESC
-       LIMIT ?;`,
-       [config.numRepertoire]
+       LIMIT 1;`
     );
-    reviews = rows.map(mapRow);
+    repertoirePiece = row ? mapRow(row) : null;
   } catch (error) {
-    console.warn('[pieceModel] Error en getExpressRoutine (reviews):', error);
+    console.warn('[pieceModel] Error en getExpressRoutine (repertoirePiece):', error);
   }
 
-  return { warmups, challenges, reviews };
+  return {
+    warmUp,
+    technicalPiece,
+    repertoirePiece,
+  };
 }
 
 // ─────────────────────────────────────────────────

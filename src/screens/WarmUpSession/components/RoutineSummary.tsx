@@ -4,29 +4,27 @@ import { View, Text, TouchableOpacity, ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { COLORS, STATUS_COLORS, STATUS_LABELS } from '../../../theme';
-import { ViolinPiece } from '../../../types';
+import { ExpressRoutine } from '../../../database/models/pieceModel';
 import { urgencyLabel } from '../utils';
 import { styles } from '../WarmUpSession.styles';
 
 interface RoutineSummaryProps {
-  routine: {
-    warmups: string[];
-    challenges: ViolinPiece[];
-    reviews: ViolinPiece[];
-  };
-  config: {
-    timeEstimateMins: number;
-  };
+  routine: ExpressRoutine;
   onStartPress: () => void;
   onBackPress: () => void;
 }
 
 export function RoutineSummary({
   routine,
-  config,
   onStartPress,
   onBackPress,
 }: RoutineSummaryProps) {
+  const { scale, rhythm } = routine.warmUp;
+
+  // Calcular el tiempo estimado dinámicamente de acuerdo a las piezas activas en la rutina
+  const estimatedTime = 5 + (routine.technicalPiece ? 8 : 0) + (routine.repertoirePiece ? 7 : 0);
+  const hintText = scale.hint || 'Toca lento, con metrónomo y afinación perfecta.';
+
   return (
     <SafeAreaView style={styles.container} edges={['top', 'bottom']}>
       {/* ── Encabezado ── */}
@@ -43,7 +41,7 @@ export function RoutineSummary({
         </View>
         <View style={styles.timerBadge}>
           <Ionicons name="time-outline" size={14} color={COLORS.accent} />
-          <Text style={styles.timerText}>~{config.timeEstimateMins} min</Text>
+          <Text style={styles.timerText}>~{estimatedTime} min</Text>
         </View>
       </View>
 
@@ -51,56 +49,53 @@ export function RoutineSummary({
         contentContainerStyle={styles.scroll}
         showsVerticalScrollIndicator={false}
       >
-        {/* ── ESCALAS ── */}
-        {routine.warmups.map((scale, index) => (
-          <View key={`warmup-${index}`} style={[styles.slotCard, { borderLeftColor: COLORS.accent }]}>
-            <View style={styles.slotHeader}>
-              <View style={[styles.slotNumber, { backgroundColor: COLORS.accent }]}>
-                <Text style={styles.slotNumberText}>{index + 1}</Text>
-              </View>
-              <Text style={[styles.slotLabel, { color: COLORS.accent }]}>
-                Calentamiento {routine.warmups.length > 1 ? index + 1 : ''}
-              </Text>
-              <Text style={styles.slotDuration}>~5 min</Text>
+        {/* ── ESCALA / CALENTAMIENTO (Slot 1) ── */}
+        <View style={[styles.slotCard, { borderLeftColor: COLORS.accent }]}>
+          <View style={styles.slotHeader}>
+            <View style={[styles.slotNumber, { backgroundColor: COLORS.accent }]}>
+              <Text style={styles.slotNumberText}>1</Text>
             </View>
-            <Text style={styles.slotTitle}>{scale}</Text>
-            <Text style={styles.slotSubtitle}>Escala aleatoria — 2 octavas</Text>
-            <View style={styles.slotHint}>
-              <Ionicons name="bulb-outline" size={12} color={COLORS.accent} />
-              <Text style={[styles.slotHintText, { color: COLORS.accent }]}>
-                Toca lento, con metrónomo, afinación perfecta
-              </Text>
-            </View>
+            <Text style={[styles.slotLabel, { color: COLORS.accent }]}>
+              Calentamiento
+            </Text>
+            <Text style={styles.slotDuration}>~5 min</Text>
           </View>
-        ))}
+          <Text style={styles.slotTitle}>{scale.name}</Text>
+          <Text style={styles.slotSubtitle}>{rhythm} · {scale.accidentals}</Text>
+          <View style={styles.slotHint}>
+            <Ionicons name="bulb-outline" size={12} color={COLORS.accent} />
+            <Text style={[styles.slotHintText, { color: COLORS.accent }]}>
+              {hintText}
+            </Text>
+          </View>
+        </View>
 
-        {/* ── RETOS TÉCNICOS ── */}
-        {routine.challenges.map((challenge, index) => (
-          <View key={`challenge-${challenge.id}`} style={[styles.slotCard, { borderLeftColor: COLORS.statusLearning }]}>
-            <View style={styles.slotHeader}>
-              <View style={[styles.slotNumber, { backgroundColor: COLORS.statusLearning }]}>
-                <Text style={styles.slotNumberText}>{routine.warmups.length + index + 1}</Text>
-              </View>
-              <Text style={[styles.slotLabel, { color: COLORS.statusLearning }]}>
-                Reto técnico {routine.challenges.length > 1 ? index + 1 : ''}
-              </Text>
-              <Text style={styles.slotDuration}>~8 min</Text>
-            </View>
-            <Text style={styles.slotTitle}>{challenge.title}</Text>
-            <Text style={styles.slotSubtitle}>{challenge.composer}</Text>
-            <View style={styles.slotHint}>
-              <Ionicons name="pulse-outline" size={12} color={STATUS_COLORS[challenge.status]} />
-              <Text style={[styles.slotHintText, { color: STATUS_COLORS[challenge.status] }]}>
-                {STATUS_LABELS[challenge.status]} · {urgencyLabel(challenge)}
-              </Text>
-            </View>
-          </View>
-        ))}
-        {routine.challenges.length === 0 && (
+        {/* ── RETO TÉCNICO (Slot 2) ── */}
+        {routine.technicalPiece ? (
           <View style={[styles.slotCard, { borderLeftColor: COLORS.statusLearning }]}>
             <View style={styles.slotHeader}>
               <View style={[styles.slotNumber, { backgroundColor: COLORS.statusLearning }]}>
-                <Text style={styles.slotNumberText}>{routine.warmups.length + 1}</Text>
+                <Text style={styles.slotNumberText}>2</Text>
+              </View>
+              <Text style={[styles.slotLabel, { color: COLORS.statusLearning }]}>
+                Reto técnico
+              </Text>
+              <Text style={styles.slotDuration}>~8 min</Text>
+            </View>
+            <Text style={styles.slotTitle}>{routine.technicalPiece.title}</Text>
+            <Text style={styles.slotSubtitle}>{routine.technicalPiece.composer}</Text>
+            <View style={styles.slotHint}>
+              <Ionicons name="pulse-outline" size={12} color={STATUS_COLORS[routine.technicalPiece.status]} />
+              <Text style={[styles.slotHintText, { color: STATUS_COLORS[routine.technicalPiece.status] }]}>
+                {STATUS_LABELS[routine.technicalPiece.status]} · {urgencyLabel(routine.technicalPiece)}
+              </Text>
+            </View>
+          </View>
+        ) : (
+          <View style={[styles.slotCard, { borderLeftColor: COLORS.statusLearning }]}>
+            <View style={styles.slotHeader}>
+              <View style={[styles.slotNumber, { backgroundColor: COLORS.statusLearning }]}>
+                <Text style={styles.slotNumberText}>2</Text>
               </View>
               <Text style={[styles.slotLabel, { color: COLORS.statusLearning }]}>Reto técnico</Text>
             </View>
@@ -111,33 +106,32 @@ export function RoutineSummary({
           </View>
         )}
 
-        {/* ── REPASOS ── */}
-        {routine.reviews.map((review, index) => (
-          <View key={`review-${review.id}`} style={[styles.slotCard, { borderLeftColor: COLORS.statusRepertoire }]}>
-            <View style={styles.slotHeader}>
-              <View style={[styles.slotNumber, { backgroundColor: COLORS.statusRepertoire }]}>
-                <Text style={styles.slotNumberText}>{routine.warmups.length + Math.max(routine.challenges.length, 1) + index + 1}</Text>
-              </View>
-              <Text style={[styles.slotLabel, { color: COLORS.statusRepertoire }]}>
-                Repaso de memoria {routine.reviews.length > 1 ? index + 1 : ''}
-              </Text>
-              <Text style={styles.slotDuration}>~7 min</Text>
-            </View>
-            <Text style={styles.slotTitle}>{review.title}</Text>
-            <Text style={styles.slotSubtitle}>{review.composer}</Text>
-            <View style={styles.slotHint}>
-              <Ionicons name="pulse-outline" size={12} color={COLORS.statusRepertoire} />
-              <Text style={[styles.slotHintText, { color: COLORS.statusRepertoire }]}>
-                {STATUS_LABELS[review.status]} · {urgencyLabel(review)}
-              </Text>
-            </View>
-          </View>
-        ))}
-        {routine.reviews.length === 0 && (
+        {/* ── REPASO DE MEMORIA (Slot 3) ── */}
+        {routine.repertoirePiece ? (
           <View style={[styles.slotCard, { borderLeftColor: COLORS.statusRepertoire }]}>
             <View style={styles.slotHeader}>
               <View style={[styles.slotNumber, { backgroundColor: COLORS.statusRepertoire }]}>
-                <Text style={styles.slotNumberText}>{routine.warmups.length + Math.max(routine.challenges.length, 1) + 1}</Text>
+                <Text style={styles.slotNumberText}>3</Text>
+              </View>
+              <Text style={[styles.slotLabel, { color: COLORS.statusRepertoire }]}>
+                Repaso de memoria
+              </Text>
+              <Text style={styles.slotDuration}>~7 min</Text>
+            </View>
+            <Text style={styles.slotTitle}>{routine.repertoirePiece.title}</Text>
+            <Text style={styles.slotSubtitle}>{routine.repertoirePiece.composer}</Text>
+            <View style={styles.slotHint}>
+              <Ionicons name="pulse-outline" size={12} color={COLORS.statusRepertoire} />
+              <Text style={[styles.slotHintText, { color: COLORS.statusRepertoire }]}>
+                {STATUS_LABELS[routine.repertoirePiece.status]} · {urgencyLabel(routine.repertoirePiece)}
+              </Text>
+            </View>
+          </View>
+        ) : (
+          <View style={[styles.slotCard, { borderLeftColor: COLORS.statusRepertoire }]}>
+            <View style={styles.slotHeader}>
+              <View style={[styles.slotNumber, { backgroundColor: COLORS.statusRepertoire }]}>
+                <Text style={styles.slotNumberText}>3</Text>
               </View>
               <Text style={[styles.slotLabel, { color: COLORS.statusRepertoire }]}>Repaso de memoria</Text>
             </View>
