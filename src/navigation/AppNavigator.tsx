@@ -3,11 +3,11 @@ import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-import HomeScreen           from '../screens/HomeScreens';
-import AddPieceScreen       from '../screens/AddPieceScreen';
-import PieceDetailScreen    from '../screens/PieceDetailScreen';
-import EditPieceScreen      from '../screens/EditPieceScreen';
-import WarmUpSessionScreen  from '../screens/WarmUpSessionScreen';
+import HomeScreen           from '../screens/HomeScreen';
+import AddPieceScreen       from '../screens/AddPiece';
+import PieceDetailScreen    from '../screens/PieceDetail';
+import EditPieceScreen      from '../screens/EditPiece';
+import WarmUpSessionScreen  from '../screens/WarmUpSession';
 
 import { ExpressRoutine } from '../database/models/pieceModel';
 

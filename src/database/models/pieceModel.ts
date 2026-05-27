@@ -82,60 +82,64 @@ export function getPieceById(id: number): ViolinPiece | null {
   }
 }
 
+import { getRoutineConfig } from './settingsModel';
+
 // ─────────────────────────────────────────────────
 // TIPOS — Rutina Exprés
 // ─────────────────────────────────────────────────
-/** Los 3 slots de la Rutina Exprés de 20 minutos. */
 export interface ExpressRoutine {
-  /** Slot 1 — Calentamiento: escala aleatoria del catálogo estático. */
-  warmup: string;
-  /** Slot 2 — Reto técnico: pieza en Learning o Polishing más urgente. */
-  challenge: ViolinPiece | null;
-  /** Slot 3 — Repaso de memoria: pieza en Repertoire más urgente. */
-  review: ViolinPiece | null;
+  warmups: string[];
+  challenges: ViolinPiece[];
+  reviews: ViolinPiece[];
 }
 
 // ─────────────────────────────────────────────────
 // READ — Rutina Exprés
 // ─────────────────────────────────────────────────
 export function getExpressRoutine(): ExpressRoutine {
-  // Slot 2: Reto técnico (la pieza en Learning o Polishing más urgente)
-  let challenge: ViolinPiece | null = null;
+  const config = getRoutineConfig();
+
+  // Escalas
+  const warmups: string[] = [];
+  for (let i = 0; i < config.numScales; i++) {
+    warmups.push(getRandomScale());
+  }
+
+  // Retos técnicos
+  let challenges: ViolinPiece[] = [];
   try {
-    const row = db.getFirstSync<RawPieceRow>(
+    const rows = db.getAllSync<RawPieceRow>(
       `SELECT * FROM violin_pieces
        WHERE status IN ('learning', 'polishing')
        ORDER BY
          date(lastPracticed, '+' || CAST(intervalDays AS TEXT) || ' days') ASC,
          difficulty DESC
-       LIMIT 1;`
+       LIMIT ?;`,
+       [config.numLearning]
     );
-    challenge = row ? mapRow(row) : null;
+    challenges = rows.map(mapRow);
   } catch (error) {
-    console.warn('[pieceModel] Error en getExpressRoutine (challenge):', error);
+    console.warn('[pieceModel] Error en getExpressRoutine (challenges):', error);
   }
 
-  // Slot 3: Repaso (la pieza en Repertoire más urgente)
-  let review: ViolinPiece | null = null;
+  // Repasos
+  let reviews: ViolinPiece[] = [];
   try {
-    const row = db.getFirstSync<RawPieceRow>(
+    const rows = db.getAllSync<RawPieceRow>(
       `SELECT * FROM violin_pieces
        WHERE status = 'repertoire'
        ORDER BY
          date(lastPracticed, '+' || CAST(intervalDays AS TEXT) || ' days') ASC,
          difficulty DESC
-       LIMIT 1;`
+       LIMIT ?;`,
+       [config.numRepertoire]
     );
-    review = row ? mapRow(row) : null;
+    reviews = rows.map(mapRow);
   } catch (error) {
-    console.warn('[pieceModel] Error en getExpressRoutine (review):', error);
+    console.warn('[pieceModel] Error en getExpressRoutine (reviews):', error);
   }
 
-  return {
-    warmup: getRandomScale(), // Slot 1: siempre disponible, sin DB
-    challenge,
-    review,
-  };
+  return { warmups, challenges, reviews };
 }
 
 // ─────────────────────────────────────────────────

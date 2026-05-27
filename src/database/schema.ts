@@ -34,12 +34,23 @@ const CREATE_QUICK_NOTES = `
 `;
 
 // ─────────────────────────────────────────────────────────────────────────────
+// MODELO: Settings — Configuración general de la app (clave-valor)
+// ─────────────────────────────────────────────────────────────────────────────
+const CREATE_SETTINGS = `
+  CREATE TABLE IF NOT EXISTS settings (
+    key   TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+  );
+`;
+
+// ─────────────────────────────────────────────────────────────────────────────
 // INICIALIZADOR PRINCIPAL
 // ─────────────────────────────────────────────────────────────────────────────
 export function initSchema(): void {
   try {
     db.execSync(CREATE_VIOLIN_PIECES);
     db.execSync(CREATE_QUICK_NOTES);
+    db.execSync(CREATE_SETTINGS);
     console.log('[Schema] Todas las tablas inicializadas correctamente.');
   } catch (error) {
     console.error('[Schema] Error al inicializar tablas:', error);

@@ -9,3 +9,5 @@ export { default as EmptyState }         from './EmptyState';
 export { default as DifficultyPicker }   from './DifficultyPicker';
 export { default as FormField }          from './FormField';
 export { default as QuickCaptureModal }  from './QuickCaptureModal';
+export { default as StatBox }            from './StatBox';
+
