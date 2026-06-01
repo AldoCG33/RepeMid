@@ -1,12 +1,12 @@
 // src/screens/HomeScreen/HomeScreen.tsx
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { View, Text, FlatList, ActivityIndicator, StatusBar } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
-import { ViolinPiece } from '../../types';
+import { ViolinPiece, PieceStatus } from '../../types';
 import { getPiecesForToday, getAllPieces, getExpressRoutine } from '../../database/models/pieceModel';
 import { addQuickNote } from '../../database/models/quickNoteModel';
 import { getRoutineConfig, RoutineConfig, DEFAULT_ROUTINE_CONFIG } from '../../database/models/settingsModel';
@@ -31,6 +31,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
   const [quickCaptureVisible, setQuickCaptureVisible] = useState(false);
   const [configVisible, setConfigVisible] = useState(false);
   const [routineConfig, setRoutineConfig] = useState<RoutineConfig>(DEFAULT_ROUTINE_CONFIG);
+  const [statusFilter, setStatusFilter] = useState<PieceStatus | null>(null);
 
   useFocusEffect(
     useCallback(() => {
@@ -56,6 +57,17 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
   const polishingCount  = allPieces.filter(p => p.status === 'polishing').length;
   const repertoireCount = allPieces.filter(p => p.status === 'repertoire').length;
 
+  // Lista filtrada por estado
+  const filteredPieces = useMemo(() => {
+    if (!statusFilter) return allPieces;
+    return allPieces.filter(p => p.status === statusFilter);
+  }, [allPieces, statusFilter]);
+
+  // Toggle: si ya está activo ese filtro, lo quita; si no, lo activa
+  const toggleFilter = useCallback((status: PieceStatus) => {
+    setStatusFilter(prev => (prev === status ? null : status));
+  }, []);
+
   const handleQuickCaptureSave = (note: string) => {
     try {
       addQuickNote(note);
@@ -77,23 +89,29 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
         }}
       />
 
-      {/* Resumen de estados SM-2 */}
+      {/* Resumen de estados SM-2 — ahora funcionan como filtros */}
       {totalPieces > 0 && (
         <View style={styles.statusSummaryRow}>
           <StatusPill
             color={COLORS.statusLearning}
             label="Aprendiendo"
             count={learningCount}
+            active={statusFilter === PieceStatus.Learning}
+            onPress={() => toggleFilter(PieceStatus.Learning)}
           />
           <StatusPill
             color={COLORS.statusPolishing}
             label="Puliendo"
             count={polishingCount}
+            active={statusFilter === PieceStatus.Polishing}
+            onPress={() => toggleFilter(PieceStatus.Polishing)}
           />
           <StatusPill
             color={COLORS.statusRepertoire}
             label="Repertorio"
             count={repertoireCount}
+            active={statusFilter === PieceStatus.Repertoire}
+            onPress={() => toggleFilter(PieceStatus.Repertoire)}
           />
         </View>
       )}
@@ -117,12 +135,16 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
               highlighted
             />
           ))}
-
-          {/* Separador "Todo el repertorio" */}
-          {totalPieces > 0 && (
-            <Text style={styles.allPiecesLabel}>Todo el repertorio</Text>
-          )}
         </View>
+      )}
+
+      {/* Separador "Todo el repertorio" o indicador de filtro activo */}
+      {totalPieces > 0 && (
+        <Text style={styles.allPiecesLabel}>
+          {statusFilter
+            ? `Filtrando: ${statusFilter === 'learning' ? 'Aprendiendo' : statusFilter === 'polishing' ? 'Puliendo' : 'Repertorio'}`
+            : 'Todo el repertorio'}
+        </Text>
       )}
     </View>
   );
@@ -164,7 +186,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
         <ActivityIndicator style={{ marginTop: 60 }} size="large" color={COLORS.accent} />
       ) : (
         <FlatList
-          data={allPieces}
+          data={filteredPieces}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => (
             <PieceCard

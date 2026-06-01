@@ -64,8 +64,12 @@ export async function scheduleReviewNotification(
 
     // Calcular cuándo disparar: en X días a las 9:00 AM
     const trigger = new Date();
-    trigger.setDate(trigger.getDate() + daysFromNow);
+    trigger.setDate(trigger.getDate() + Math.round(daysFromNow));
     trigger.setHours(9, 0, 0, 0);
+
+    // Si la fecha ya pasó (por ejemplo, si hoy ya son más de las 9am y el redondeo dio 0)
+    // No programar en el pasado
+    if (trigger.getTime() < Date.now()) return;
 
     await Notifications.scheduleNotificationAsync({
       identifier: notifId(piece.id),
@@ -74,12 +78,18 @@ export async function scheduleReviewNotification(
         body: `"${piece.title}" te espera hoy en tu repertorio.`,
         data: { pieceId: piece.id },
         sound: true,
+        autoDismiss: true,
       },
-      trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: trigger },
+      // Especificamos un objeto trigger en lugar de usar types
+      trigger: { 
+        type: Notifications.SchedulableTriggerInputTypes.DATE, 
+        date: trigger,
+        channelId: 'practice-reminders' // Referencia al canal de alta prioridad
+      },
     });
 
     console.log(
-      `[notifications] Notificación programada → "${piece.title}" en ${daysFromNow} días (${trigger.toLocaleDateString('es-MX')})`
+      `[notifications] Notificación programada → "${piece.title}" en ${Math.round(daysFromNow)} días (${trigger.toLocaleDateString('es-MX')})`
     );
   } catch (error) {
     // Las notificaciones son no-críticas: solo loguear, nunca lanzar

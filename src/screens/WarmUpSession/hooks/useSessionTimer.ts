@@ -30,6 +30,14 @@ export function useSessionTimer(steps: SessionStep[]): UseSessionTimerResult {
   const [isPaused, setIsPaused] = useState(false);
   const [isComplete, setIsComplete] = useState(false);
 
+  // Ref para mantener siempre el valor actual de currentStep
+  // (evita stale closures en callbacks del timer)
+  const currentStepRef = useRef(currentStep);
+  currentStepRef.current = currentStep;
+
+  // Flag para evitar doble avance cuando el timer llega a 0
+  const advancingRef = useRef(false);
+
   // Animaciones
   const progressAnim = useRef(new Animated.Value(1)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -41,6 +49,7 @@ export function useSessionTimer(steps: SessionStep[]): UseSessionTimerResult {
   // ── Iniciar sesión ──
   const startSession = useCallback(() => {
     if (steps.length === 0) return;
+    advancingRef.current = false;
     setSessionActive(true);
     setCurrentStep(0);
     setTimeLeft(steps[0].durationSecs);
@@ -55,13 +64,24 @@ export function useSessionTimer(steps: SessionStep[]): UseSessionTimerResult {
   }, [steps, fadeAnim, progressAnim]);
 
   // ── Avanzar al siguiente paso ──
+  // Lee siempre del ref para tener el valor más reciente
   const nextStep = useCallback(() => {
-    const next = currentStep + 1;
+    // Evitar doble avance por race condition del setInterval
+    if (advancingRef.current) return;
+    advancingRef.current = true;
+
+    const current = currentStepRef.current;
+    const next = current + 1;
+
     if (next >= steps.length) {
       // Sesión completa
-      if (timerRef.current) clearInterval(timerRef.current);
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
       setIsComplete(true);
       Vibration.vibrate([0, 200, 100, 200]);
+      advancingRef.current = false;
       return;
     }
     setCurrentStep(next);
@@ -69,20 +89,28 @@ export function useSessionTimer(steps: SessionStep[]): UseSessionTimerResult {
     setIsPaused(false);
     progressAnim.setValue(1);
     Vibration.vibrate(100);
-  }, [currentStep, steps, progressAnim]);
+
+    // Liberar el flag después de un breve delay para que React procese el estado
+    setTimeout(() => {
+      advancingRef.current = false;
+    }, 50);
+  }, [steps, progressAnim]);
 
   // ── Timer countdown ──
+  // Ya NO llama a nextStep dentro de setTimeLeft.
+  // Solo decrementa; la detección de tiempo agotado se hace en otro useEffect.
   useEffect(() => {
     if (!sessionActive || isPaused || isComplete) {
-      if (timerRef.current) clearInterval(timerRef.current);
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
       return;
     }
 
     timerRef.current = setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
-          // Tiempo agotado, avanzar
-          nextStep();
           return 0;
         }
         return prev - 1;
@@ -90,9 +118,19 @@ export function useSessionTimer(steps: SessionStep[]): UseSessionTimerResult {
     }, 1000);
 
     return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
     };
-  }, [sessionActive, isPaused, isComplete, nextStep]);
+  }, [sessionActive, isPaused, isComplete]);
+
+  // ── Detectar tiempo agotado y avanzar al siguiente paso ──
+  useEffect(() => {
+    if (sessionActive && !isPaused && !isComplete && timeLeft === 0) {
+      nextStep();
+    }
+  }, [timeLeft, sessionActive, isPaused, isComplete, nextStep]);
 
   // ── Animar progreso ──
   useEffect(() => {
