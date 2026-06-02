@@ -84,7 +84,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
         routineConfig={routineConfig}
         onConfigPress={() => setConfigVisible(true)}
         onStartPress={() => {
-          const routine = getExpressRoutine();
+          const routine = getExpressRoutine(routineConfig);
           navigation.navigate('WarmUpSession', { routine });
         }}
       />

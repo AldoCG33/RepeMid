@@ -36,19 +36,19 @@ export function buildSteps(routine: ExpressRoutine): SessionStep[] {
   const steps: SessionStep[] = [];
   
   // Calentamiento (Escala + Ritmo)
-  const { scale, rhythm } = routine.warmUp;
-  steps.push({
-    type: 'warmup',
-    title: scale.name,
-    subtitle: `${rhythm} · ${scale.accidentals}`,
-    durationSecs: 5 * 60,
-    color: COLORS.accent,
-    icon: 'musical-note',
+  routine.warmUps.forEach((warmUp) => {
+    steps.push({
+      type: 'warmup',
+      title: warmUp.scale.name,
+      subtitle: `${warmUp.rhythm} · ${warmUp.scale.accidentals}`,
+      durationSecs: 5 * 60,
+      color: COLORS.accent,
+      icon: 'musical-note',
+    });
   });
 
   // Reto técnico
-  if (routine.technicalPiece) {
-    const piece = routine.technicalPiece;
+  routine.technicalPieces.forEach((piece) => {
     steps.push({
       type: 'challenge',
       title: piece.title,
@@ -58,11 +58,10 @@ export function buildSteps(routine: ExpressRoutine): SessionStep[] {
       icon: 'flame',
       piece,
     });
-  }
+  });
 
   // Repaso
-  if (routine.repertoirePiece) {
-    const piece = routine.repertoirePiece;
+  routine.repertoirePieces.forEach((piece) => {
     steps.push({
       type: 'review',
       title: piece.title,
@@ -72,7 +71,7 @@ export function buildSteps(routine: ExpressRoutine): SessionStep[] {
       icon: 'refresh',
       piece,
     });
-  }
+  });
 
   return steps;
 }
